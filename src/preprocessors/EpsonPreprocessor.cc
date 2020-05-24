@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <bitset>
 #include <glibmm.h>
 #include "EpsonPreprocessor.h"
 
@@ -215,7 +216,11 @@ void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
         }
         ++m_GraphicAssembledBytes;
 
-        std::cout << std::hex << c;
+        std::cout << std::bitset<8>(c);
+        if (0 == (m_GraphicAssembledBytes % 3))
+        {
+            std::cout << std::endl;
+        }
 
         if (m_GraphicAssembledBytes >= (m_GraphicsMaxBytes + 3))
         {
