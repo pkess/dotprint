@@ -123,7 +123,6 @@ void CairoTTY::StretchFont(double stretch_x, double stretch_y)
 
 void CairoTTY::append(gunichar c)
 {
-    assert(!Glib::Unicode::iscntrl(c));
 
     Glib::ustring s(1, c);
 
