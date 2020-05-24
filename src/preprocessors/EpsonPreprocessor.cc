@@ -204,28 +204,24 @@ void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
         m_GraphicsNrColumns += nh * 256;
         m_GraphicAssembledBytes = 3;
     }
-    else if (m_GraphicAssembledBytes == 3)
-    {
-        m_GraphicsMaxBytes = m_GraphicsNrColumns * 3;
-        std::cout << "Graphics definition mode (" << (unsigned int) m_GraphicsMode;
-        std::cout << ") colums (" << m_GraphicsNrColumns;
-        std::cout << ") bytes (" << m_GraphicsMaxBytes << ")" << std::endl;
-        m_GraphicAssembledBytes = 4;
-    }
     else
     {
-        if (0 == c)
+        if (m_GraphicAssembledBytes == 3)
         {
-            //m_InputState = InputState::InputNormal; // Leave escape state
+            m_GraphicsMaxBytes = m_GraphicsNrColumns * 3;
+            std::cout << "Graphics definition mode (" << (unsigned int) m_GraphicsMode;
+            std::cout << ") colums (" << m_GraphicsNrColumns;
+            std::cout << ") bytes (" << m_GraphicsMaxBytes << ")" << std::endl;
         }
-        else if (0x1B == c)
+        ++m_GraphicAssembledBytes;
+
+        std::cout << std::hex << c;
+
+        if (m_GraphicAssembledBytes >= (m_GraphicsMaxBytes + 3))
         {
-            m_InputState = InputState::Escape; // Leave escape state
-            m_EscapeState = EscapeState::Entered;
-        }
-        else
-        {
-            std::cerr << "Ignoring Graphics definition: " << c << std::endl;
+            std::cout << std::endl;
+            std::cout << "Finished graphics" << std::endl;
+            m_InputState = InputState::InputNormal; // Leave escape state
         }
     }
 }
