@@ -40,7 +40,10 @@ private:
     enum class EscapeState
     {
         Entered,
-        Underline
+        Underline,
+        DropBytes,
+        InsertTab,
+        Unknown
     };
 
     enum class FontSizeState
@@ -54,6 +57,7 @@ private:
     EscapeState m_EscapeState;
     FontSizeState m_FontSizeState;
     bool m_Escape;
+    int m_CntBytesToDrop;
 };
 
 #endif // EPSON_PREPROCESSOR_H_

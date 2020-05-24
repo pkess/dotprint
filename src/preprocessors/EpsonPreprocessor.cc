@@ -25,7 +25,8 @@
 EpsonPreprocessor::EpsonPreprocessor():
     m_InputState(InputState::InputNormal),
     m_EscapeState(EscapeState::Entered), // not used unless m_InputState is Escape
-    m_FontSizeState(FontSizeState::FontSizeNormal)
+    m_FontSizeState(FontSizeState::FontSizeNormal),
+    m_CntBytesToDrop(0)
 {}
 
 void EpsonPreprocessor::process(ICairoTTYProtected &ctty, gunichar c)
@@ -102,6 +103,21 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
         case 0x2d: // Underline
             m_EscapeState = EscapeState::Underline;
             break;
+        case 0x33: // Set n/180-inch line spacing ESC 3 n (24 pin printer - ESC/P2 or ESC/P) or
+                    // n/216 inches line spacing (9 pin printer)
+            m_CntBytesToDrop = 1;
+            m_EscapeState = EscapeState::DropBytes;
+            break;
+        case 0x40: // @: Initialize
+            m_InputState = InputState::InputNormal; // Leave escape state
+            break;
+        case 0x44: // Insert tab
+            m_EscapeState = EscapeState::InsertTab;
+            break;
+        case 0x78: // Select quality
+            m_CntBytesToDrop = 1;
+            m_EscapeState = EscapeState::DropBytes;
+            break;
 
         default:
             std::cerr << "EpsonPreprocessor::handleEscape(): ignoring unknown escape ESC 0x" << std::hex << c << std::endl;
@@ -126,6 +142,24 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
             //std::cerr << "EpsonPreprocessor::handleEscape(): Ignoring unsupported escape: DROP UNDERLINE" << std::endl;
         }
         m_InputState = InputState::InputNormal; // Leave escape state
+        break;
+
+    case EscapeState::InsertTab: // Insert tabs in text
+        if (0 == c)
+        {
+            m_InputState = InputState::InputNormal; // Leave escape state
+        }
+        else
+        {
+            std::cerr << "Ignoring Tab definition: " << c << std::endl;
+        }
+        break;
+
+    case EscapeState::DropBytes: // Dummy to drop some bytes after not implemented escape
+        if (0 >= --m_CntBytesToDrop)
+        {
+            m_InputState = InputState::InputNormal; // Leave escape state
+        }
         break;
 
     default:
