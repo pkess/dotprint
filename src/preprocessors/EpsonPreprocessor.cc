@@ -92,7 +92,7 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, gunichar c)
             }
             else
             {
-                std::cout << "Dropping: " << c << std::endl;
+                std::cout << "Dropping: 0x" << std::hex << c << std::endl;
             }
             break;
         }
@@ -106,6 +106,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
     // Determine what escape code follows
     if (m_EscapeState == EscapeState::Entered)
     {
+        std::cout << "ESC 0x" << std::hex << c << std::endl;
         switch (c)
         {
         case 0x2d: // Underline
@@ -123,7 +124,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
             m_EscapeState = EscapeState::InsertTab;
             break;
         case 0x78: // Select quality
-            m_CntBytesToDrop = 1;
+            m_CntBytesToDrop = 2;
             m_EscapeState = EscapeState::DropBytes;
             break;
 
