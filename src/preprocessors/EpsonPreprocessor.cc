@@ -188,10 +188,29 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
 void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
 {
     (void)ctty; // currently unused
-    if (m_GraphicAssembledBytes < 3)
+    if (0 == m_GraphicAssembledBytes)
     {
-        // TODO: parse first bytes here
-        ++m_GraphicAssembledBytes;
+        m_GraphicsMode = c;
+        m_GraphicAssembledBytes = 1;
+    }
+    else if (m_GraphicAssembledBytes == 1)
+    {
+        m_GraphicsNrColumns = (unsigned char) c;
+        m_GraphicAssembledBytes = 2;
+    }
+    else if (m_GraphicAssembledBytes == 2)
+    {
+        int nh = (unsigned char) c;
+        m_GraphicsNrColumns += nh * 256;
+        m_GraphicAssembledBytes = 3;
+    }
+    else if (m_GraphicAssembledBytes == 3)
+    {
+        m_GraphicsMaxBytes = m_GraphicsNrColumns * 3;
+        std::cout << "Graphics definition mode (" << (unsigned int) m_GraphicsMode;
+        std::cout << ") colums (" << m_GraphicsNrColumns;
+        std::cout << ") bytes (" << m_GraphicsMaxBytes << ")" << std::endl;
+        m_GraphicAssembledBytes = 4;
     }
     else
     {

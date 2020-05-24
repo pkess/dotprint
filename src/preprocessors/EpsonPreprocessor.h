@@ -61,6 +61,11 @@ private:
     bool m_Escape;
     int m_CntBytesToDrop;
     int m_GraphicAssembledBytes;
+    unsigned char m_GraphicsMode; // Graphics mode
+    int m_GraphicsDpi; // Dots per inch
+    int m_GraphicsDpc; // Dots per column
+    int m_GraphicsNrColumns; // Number of columns
+    int m_GraphicsMaxBytes; // Number of columns
 };
 
 #endif // EPSON_PREPROCESSOR_H_
