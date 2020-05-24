@@ -19,7 +19,6 @@
 
 #include <stdexcept>
 #include <iostream>
-#include <bitset>
 #include <glibmm.h>
 #include "EpsonPreprocessor.h"
 
@@ -188,7 +187,9 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
 
 void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
 {
-    (void)ctty; // currently unused
+    static struct Pixmap p;
+    static int col;
+
     if (0 == m_GraphicAssembledBytes)
     {
         m_GraphicsMode = c;
@@ -204,6 +205,7 @@ void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
         int nh = (unsigned char) c;
         m_GraphicsNrColumns += nh * 256;
         m_GraphicAssembledBytes = 3;
+        p.map.clear();
     }
     else
     {
@@ -214,19 +216,22 @@ void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
             std::cout << ") colums (" << m_GraphicsNrColumns;
             std::cout << ") bytes (" << m_GraphicsMaxBytes << ")" << std::endl;
         }
-        ++m_GraphicAssembledBytes;
 
-        std::cout << std::bitset<8>(c);
-        if (0 == (m_GraphicAssembledBytes % 3))
+        int rowGroup = m_GraphicAssembledBytes % 3;
+        col |= ((unsigned int) c) << (8 * (2 - rowGroup));
+        if (2 == rowGroup)
         {
-            std::cout << std::endl;
+            p.map.push_back(col);
+            col = 0;
         }
 
+        ++m_GraphicAssembledBytes;
         if (m_GraphicAssembledBytes >= (m_GraphicsMaxBytes + 3))
         {
             std::cout << std::endl;
             std::cout << "Finished graphics" << std::endl;
             m_InputState = InputState::InputNormal; // Leave escape state
+            ctty.append(p);
         }
     }
 }

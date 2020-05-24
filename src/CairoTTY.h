@@ -72,6 +72,14 @@ struct PageSize
     double m_Height;
 };
 
+struct Pixmap
+{
+    Pixmap()
+    {}
+
+    std::vector<int> map;
+};
+
 class ICairoTTYProtected
 {
 public:
@@ -85,6 +93,7 @@ public:
     virtual void StretchFont(double stretch_x, double stretch_y = 1.0) = 0;
 
     virtual void append(gunichar c) = 0;
+    virtual void append(Pixmap p) = 0;
 
     virtual ~ICairoTTYProtected()
     {}
@@ -126,6 +135,7 @@ public:
 
 protected:
     virtual void append(gunichar c);
+    virtual void append(Pixmap p);
 
 private:
     Cairo::RefPtr<Cairo::PdfSurface> m_CairoSurface;

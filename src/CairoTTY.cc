@@ -143,3 +143,29 @@ void CairoTTY::append(gunichar c)
     // vertical text layout.
     m_x += x_advance;
 }
+
+void CairoTTY::append(Pixmap p)
+{
+    int x0 = m_Margins.m_Left + m_x;
+    int y0 = m_Margins.m_Top + m_y;
+    int x = 0;
+    int y = 0;
+
+    m_Context->save();
+    for (auto &row : p.map)
+    {
+        y = 0;
+        for (int i = 0; i < 24; ++i)
+        {
+            if (row & (1 << (23 - i)))
+            {
+                m_Context->move_to(x0 + x, y0 + y);
+                m_Context->line_to(x0 + x + 1, y0 + y);
+            }
+            ++y;
+        }
+        ++x;
+    }
+    m_Context->stroke();
+    m_Context->restore();
+}
