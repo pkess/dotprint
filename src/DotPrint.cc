@@ -53,7 +53,7 @@ public:
         assert(m_io != nullptr);
         char ch;
         (*m_io).get(ch);
-        c = ch;
+        c = (unsigned char) ch;
 
         if ((*m_io).eof())
             m_eof = true;
