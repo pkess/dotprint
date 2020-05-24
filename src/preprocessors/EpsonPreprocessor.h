@@ -30,6 +30,7 @@ public:
 
 private:
     void handleEscape(ICairoTTYProtected &ctty, gunichar c);
+    void handleGraphics(ICairoTTYProtected &ctty, gunichar c);
 
     enum class InputState
     {
@@ -43,6 +44,7 @@ private:
         Underline,
         DropBytes,
         InsertTab,
+        DrawGraphics,
         Unknown
     };
 
@@ -58,6 +60,7 @@ private:
     FontSizeState m_FontSizeState;
     bool m_Escape;
     int m_CntBytesToDrop;
+    int m_GraphicAssembledBytes;
 };
 
 #endif // EPSON_PREPROCESSOR_H_

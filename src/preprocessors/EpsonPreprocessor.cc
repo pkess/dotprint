@@ -109,6 +109,10 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
         std::cout << "ESC 0x" << std::hex << c << std::endl;
         switch (c)
         {
+        case 0x2a: // Draw Graphics
+            m_GraphicAssembledBytes = 0;
+            m_EscapeState = EscapeState::DrawGraphics;
+            break;
         case 0x2d: // Underline
             m_EscapeState = EscapeState::Underline;
             break;
@@ -164,6 +168,10 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
         }
         break;
 
+    case EscapeState::DrawGraphics: // Insert tabs in text
+        handleGraphics(ctty, c);
+        break;
+
     case EscapeState::DropBytes: // Dummy to drop some bytes after not implemented escape
         if (0 >= --m_CntBytesToDrop)
         {
@@ -174,5 +182,31 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
     default:
         throw std::runtime_error("EpsonPreprocessor::handleEscape(): Internal error: entered unknown escape state "
             + std::to_string(static_cast<int>(m_EscapeState)));
+    }
+}
+
+void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
+{
+    (void)ctty; // currently unused
+    if (m_GraphicAssembledBytes < 3)
+    {
+        // TODO: parse first bytes here
+        ++m_GraphicAssembledBytes;
+    }
+    else
+    {
+        if (0 == c)
+        {
+            //m_InputState = InputState::InputNormal; // Leave escape state
+        }
+        else if (0x1B == c)
+        {
+            m_InputState = InputState::Escape; // Leave escape state
+            m_EscapeState = EscapeState::Entered;
+        }
+        else
+        {
+            std::cerr << "Ignoring Graphics definition: " << c << std::endl;
+        }
     }
 }
