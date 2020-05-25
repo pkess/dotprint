@@ -162,7 +162,11 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
         }
         else
         {
-            std::cerr << "Ignoring Tab definition: " << c << std::endl;
+            int nrTabs = (unsigned int) c;
+            for (int i = 0; i < nrTabs; ++i)
+            {
+                ctty.append(' ');
+            }
         }
         break;
 
