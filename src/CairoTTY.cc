@@ -115,6 +115,11 @@ void CairoTTY::NewPage()
     Home();
 }
 
+void CairoTTY::LineSpacing(double spacing)
+{
+    m_y += spacing;
+}
+
 void CairoTTY::StretchFont(double stretch_x, double stretch_y)
 {
     m_StretchX = stretch_x;
