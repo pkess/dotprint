@@ -101,8 +101,6 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, gunichar c)
 
 void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
 {
-    (void)ctty; // currently unused
-
     // Determine what escape code follows
     if (m_EscapeState == EscapeState::Entered)
     {
