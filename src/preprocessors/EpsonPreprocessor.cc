@@ -81,19 +81,7 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, gunichar c)
             break;
 
         default:
-            if (c >= 21 && c < 127)
-            {
-                ctty.append(c);
-            }
-            else if (c == 9)
-            {
-                // Tab
-                ctty.append(c);
-            }
-            else
-            {
-                std::cout << "Dropping: 0x" << std::hex << c << std::endl;
-            }
+            ctty.append(c);
             break;
         }
     }

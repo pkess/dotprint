@@ -128,8 +128,19 @@ void CairoTTY::StretchFont(double stretch_x, double stretch_y)
 
 void CairoTTY::append(gunichar c)
 {
-
     Glib::ustring s(1, c);
+
+    if (c >= 21 && c < 127)
+    {
+    }
+    else if (c == 9) // Tab
+    {
+    }
+    else
+    {
+        //std::cout << "Dropping: 0x" << std::hex << c << std::endl;
+        return;
+    }
 
     Cairo::TextExtents t;
     m_Context->get_text_extents(s, t);
