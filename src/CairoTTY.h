@@ -112,7 +112,7 @@ public:
 class ICodepageTranslator
 {
 public:
-    virtual bool translate(char in, gunichar &out) = 0;
+    virtual bool translate(unsigned char in, gunichar &out) = 0;
 
     virtual ~ICodepageTranslator()
     {}
