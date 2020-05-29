@@ -89,7 +89,7 @@ public:
     virtual void NewLine() = 0;
     virtual void CarriageReturn() = 0;
     virtual void LineFeed() = 0;
-    virtual void LineSpacing(double spacing) = 0;
+    virtual void SetLineSpacing(double spacing) = 0;
     virtual void NewPage() = 0;
     virtual void StretchFont(double stretch_x, double stretch_y = 1.0) = 0;
 
@@ -140,7 +140,7 @@ public:
     virtual void NewLine();
     virtual void CarriageReturn();
     virtual void LineFeed();
-    virtual void LineSpacing(double spacing);
+    virtual void SetLineSpacing(double spacing);
     virtual void NewPage();
     virtual void StretchFont(double stretch_x, double stretch_y = 1.0);
 
@@ -158,6 +158,7 @@ private:
 
     double m_x;
     double m_y;
+    double m_lineSpacing;
 
     double m_StretchX;
     double m_StretchY;

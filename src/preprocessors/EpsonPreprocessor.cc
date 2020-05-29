@@ -104,8 +104,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
             break;
         case 0x33: // Set n/180-inch line spacing ESC 3 n (24 pin printer - ESC/P2 or ESC/P) or
                     // n/216 inches line spacing (9 pin printer)
-            m_CntBytesToDrop = 1;
-            m_EscapeState = EscapeState::DropBytes;
+            m_EscapeState = EscapeState::SetLineSpacing;
             break;
         case 0x40: // @: Initialize
             m_InputState = InputState::InputNormal; // Leave escape state
@@ -114,8 +113,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
             m_EscapeState = EscapeState::InsertTab;
             break;
         case 0x78: // Select quality
-            m_CntBytesToDrop = 2;
-            m_EscapeState = EscapeState::DropBytes;
+            m_EscapeState = EscapeState::SelectQuality;
             break;
 
         default:
@@ -143,6 +141,15 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
         m_InputState = InputState::InputNormal; // Leave escape state
         break;
 
+    case EscapeState::SetLineSpacing:
+        {
+            int nrTabs = (unsigned int) c;
+            double spacing = ((double) nrTabs) / 180.0;
+            ctty.SetLineSpacing(spacing);
+        }
+        m_InputState = InputState::InputNormal;
+        break;
+
     case EscapeState::InsertTab: // Insert tabs in text
         if (0 == c)
         {
@@ -156,6 +163,11 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
                 ctty.append(' ');
             }
         }
+        break;
+
+    case EscapeState::SelectQuality:
+        std::cout << "Select quality: " << std::dec << c << std::endl;
+        m_InputState = InputState::InputNormal;
         break;
 
     case EscapeState::DrawGraphics: // Insert tabs in text

@@ -33,7 +33,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
     SetPageSize(p);
     StretchFont(1.0, 1.0);
     SetFont("Courier New", 10.0);
-
+    m_lineSpacing = m_FontExtents.height * m_StretchY;
     Home();
 }
 
@@ -88,7 +88,7 @@ void CairoTTY::SetPageSize(const PageSize &p)
 void CairoTTY::Home()
 {
     m_x = 0.0;
-    m_y = m_FontExtents.height * m_StretchY; // so that the top of the first line touches 0.0
+    m_y = m_lineSpacing; // so that the top of the first line touches 0.0
 }
 
 void CairoTTY::NewLine()
@@ -104,7 +104,7 @@ void CairoTTY::CarriageReturn()
 
 void CairoTTY::LineFeed()
 {
-    m_y += m_FontExtents.height * m_StretchY;
+    m_y += m_lineSpacing;
 
     // check if we still fit on the page
     if (m_Margins.m_Top + m_y > m_PageSize.m_Height - m_Margins.m_Bottom)
@@ -117,9 +117,9 @@ void CairoTTY::NewPage()
     Home();
 }
 
-void CairoTTY::LineSpacing(double spacing)
+void CairoTTY::SetLineSpacing(double spacing)
 {
-    m_y += spacing;
+    m_lineSpacing = 72.0 *  spacing;
 }
 
 void CairoTTY::StretchFont(double stretch_x, double stretch_y)
@@ -134,6 +134,11 @@ void CairoTTY::append(gunichar c)
 
     if (m_CpTranslator->translate(c, uc))
     {
+        if (c == 0x09)
+        {
+            // TODO: tab handling
+            return;
+        }
         Glib::ustring s(1, uc);
 
         Cairo::TextExtents t;
@@ -157,21 +162,28 @@ void CairoTTY::append(gunichar c)
 
 void CairoTTY::append(Pixmap p)
 {
-    int x0 = m_Margins.m_Left + m_x;
-    int y0 = m_Margins.m_Top + m_y;
-    int x = 0;
-    int y = 0;
+    double x0 = m_Margins.m_Left + m_x -6.0;
+    double y0 = m_Margins.m_Top + m_y -6.0;
+    double x = 0;
+    double y = 0;
+    double x_inc = 0.6;
+    double y_inc = 0.4;
 
     m_Context->save();
+    m_Context->set_line_width(0.4);
     for (auto &row : p.map)
     {
         y = 0;
+        double x_off = x0 + (x * x_inc);
         for (int i = 0; i < 24; ++i)
         {
+            double y_off = y0 + (y * y_inc);
             if (row & (1 << (23 - i)))
             {
-                m_Context->move_to(x0 + x, y0 + y);
-                m_Context->line_to(x0 + x + 1, y0 + y);
+                m_Context->move_to(x_off, y_off);
+                m_Context->line_to(x_off + 0.6, y_off);
+                m_Context->line_to(x_off + 0.6, y_off + y_inc);
+                m_Context->line_to(x_off, y_off + y_inc);
             }
             ++y;
         }

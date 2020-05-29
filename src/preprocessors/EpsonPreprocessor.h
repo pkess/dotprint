@@ -42,8 +42,10 @@ private:
     {
         Entered,
         Underline,
+        SetLineSpacing,
         DropBytes,
         InsertTab,
+        SelectQuality,
         DrawGraphics,
         Unknown
     };
