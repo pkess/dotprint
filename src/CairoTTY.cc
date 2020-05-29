@@ -120,7 +120,7 @@ void CairoTTY::NewPage()
 
 void CairoTTY::SetLineSpacing(double spacing)
 {
-    m_lineSpacing = 72.0 *  spacing;
+    m_lineSpacing = 69.0 *  spacing;
 }
 
 void CairoTTY::SetTabWidth(int spaces)
@@ -173,12 +173,12 @@ void CairoTTY::append(gunichar c)
 
 void CairoTTY::append(Pixmap p)
 {
-    double x0 = m_Margins.m_Left + m_x -6.0;
+    double x0 = m_Margins.m_Left + m_x -4.0;
     double y0 = m_Margins.m_Top + m_y -6.0;
     double x = 0;
     double y = 0;
-    double x_inc = 0.6;
-    double y_inc = 0.4;
+    double x_inc = 0.55;
+    double y_inc = 0.36;
 
     m_Context->save();
     m_Context->set_line_width(0.4);
