@@ -25,7 +25,8 @@
 CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const Margins &m, ICharPreprocessor *preprocessor):
     m_CairoSurface(cs),
     m_Margins(m),
-    m_Preprocessor(preprocessor)
+    m_Preprocessor(preprocessor),
+    m_tabWidth(8)
 {
     m_Context = Cairo::Context::create(m_CairoSurface);
     m_CpTranslator = new CodepageTranslator();
@@ -122,6 +123,12 @@ void CairoTTY::SetLineSpacing(double spacing)
     m_lineSpacing = 72.0 *  spacing;
 }
 
+void CairoTTY::SetTabWidth(int spaces)
+{
+
+    m_tabWidth = spaces;
+}
+
 void CairoTTY::StretchFont(double stretch_x, double stretch_y)
 {
     m_StretchX = stretch_x;
@@ -137,6 +144,10 @@ void CairoTTY::append(gunichar c)
         if (c == 0x09)
         {
             // TODO: tab handling
+            for (int i = 0; i < m_tabWidth; ++i)
+            {
+                append((gunichar) ' ');
+            }
             return;
         }
         Glib::ustring s(1, uc);

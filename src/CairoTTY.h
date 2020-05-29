@@ -90,6 +90,7 @@ public:
     virtual void CarriageReturn() = 0;
     virtual void LineFeed() = 0;
     virtual void SetLineSpacing(double spacing) = 0;
+    virtual void SetTabWidth(int spaces) = 0;
     virtual void NewPage() = 0;
     virtual void StretchFont(double stretch_x, double stretch_y = 1.0) = 0;
 
@@ -141,6 +142,7 @@ public:
     virtual void CarriageReturn();
     virtual void LineFeed();
     virtual void SetLineSpacing(double spacing);
+    virtual void SetTabWidth(int spaces);
     virtual void NewPage();
     virtual void StretchFont(double stretch_x, double stretch_y = 1.0);
 
@@ -156,6 +158,7 @@ private:
     Margins m_Margins;
     PageSize m_PageSize;
 
+    int m_tabWidth;
     double m_x;
     double m_y;
     double m_lineSpacing;

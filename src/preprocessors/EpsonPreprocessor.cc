@@ -158,10 +158,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
         else
         {
             int nrTabs = (unsigned int) c;
-            for (int i = 0; i < nrTabs; ++i)
-            {
-                ctty.append(' ');
-            }
+            ctty.SetTabWidth(nrTabs);
         }
         break;
 
