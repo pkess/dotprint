@@ -44,7 +44,7 @@ private:
         Underline,
         SetLineSpacing,
         DropBytes,
-        InsertTab,
+        SetTabWidth,
         SelectQuality,
         DrawGraphics,
         Unknown

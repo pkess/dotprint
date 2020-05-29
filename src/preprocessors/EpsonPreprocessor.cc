@@ -110,7 +110,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
             m_InputState = InputState::InputNormal; // Leave escape state
             break;
         case 0x44: // Insert tab
-            m_EscapeState = EscapeState::InsertTab;
+            m_EscapeState = EscapeState::SetTabWidth;
             break;
         case 0x78: // Select quality
             m_EscapeState = EscapeState::SelectQuality;
@@ -150,7 +150,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
         m_InputState = InputState::InputNormal;
         break;
 
-    case EscapeState::InsertTab: // Insert tabs in text
+    case EscapeState::SetTabWidth: // Set width of tabs
         if (0 == c)
         {
             m_InputState = InputState::InputNormal; // Leave escape state
