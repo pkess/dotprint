@@ -17,24 +17,18 @@
  * along with dotprint. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <map>
 #include <sstream>
 #include <string>
 #include "CairoTTY.h"
 
-class CodepageTranslator : public ICodepageTranslator
+class AsciiCodepageTranslator : public ICodepageTranslator
 {
 public:
-    CodepageTranslator();
-    virtual ~CodepageTranslator();
-
-    void loadTable(std::string const& tableName);
+    AsciiCodepageTranslator();
+    virtual ~AsciiCodepageTranslator();
 
     virtual bool translate(unsigned char in, gunichar &out);
 
 private:
-    typedef std::map<unsigned char, gunichar> TTransTable;
-
-    TTransTable m_table;
 };
 

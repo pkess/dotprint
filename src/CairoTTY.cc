@@ -20,21 +20,26 @@
 #include <iostream>
 #include <assert.h>
 #include "CairoTTY.h"
+#include "AsciiCodepageTranslator.h"
 #include "CodepageTranslator.h"
 
-CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const Margins &m, ICharPreprocessor *preprocessor):
+CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const Margins &m, ICharPreprocessor *preprocessor, ICodepageTranslator *translator):
     m_CairoSurface(cs),
+    m_FontName("Courier New"),
+    m_FontSize(10.0),
+    m_FontWeight(FontWeight::Normal),
+    m_FontSlant(FontSlant::Normal),
     m_Margins(m),
     m_Preprocessor(preprocessor),
-    m_tabWidth(8)
+    m_CpTranslator(translator)
 {
     m_Context = Cairo::Context::create(m_CairoSurface);
-    m_CpTranslator = new CodepageTranslator();
 
     SetPageSize(p);
+
     StretchFont(1.0, 1.0);
-    SetFont("Courier New", 10.0);
-    m_lineSpacing = m_FontExtents.height * m_StretchY;
+    UseCurrentFont();
+
     Home();
 }
 
@@ -44,20 +49,12 @@ CairoTTY::~CairoTTY()
     m_CairoSurface->finish();
 }
 
-CairoTTY &CairoTTY::operator<<(const Glib::ustring &s)
-{
-    for (gunichar c : s)
-        operator<<(c);
-
-    return *this;
-}
-
-CairoTTY &CairoTTY::operator<<(gunichar c)
+CairoTTY &CairoTTY::operator<<(unsigned char c)
 {
     if (m_Preprocessor)
         m_Preprocessor->process(*this, c);
     else
-        append(c);
+        append((char) c);
 
     return *this;
 }
@@ -75,6 +72,34 @@ void CairoTTY::SetFont(const std::string &family, double size, Cairo::FontSlant 
     m_Context->set_font_size(size);
 
     m_Context->get_font_extents(m_FontExtents);
+}
+
+void CairoTTY::UseCurrentFont()
+{
+    Cairo::FontWeight weight;
+    Cairo::FontSlant slant;
+
+    switch (m_FontWeight)
+    {
+        case FontWeight::Bold:
+            weight = Cairo::FONT_WEIGHT_BOLD;
+            break;
+        default:
+            weight = Cairo::FONT_WEIGHT_NORMAL;
+            break;
+    }
+
+    switch (m_FontSlant)
+    {
+        case FontSlant::Italic:
+            slant = Cairo::FONT_SLANT_ITALIC;
+            break;
+        default:
+            slant = Cairo::FONT_SLANT_NORMAL;
+            break;
+    }
+
+    SetFont(m_FontName, m_FontSize, slant, weight);
 }
 
 void CairoTTY::SetPageSize(const PageSize &p)
@@ -118,14 +143,32 @@ void CairoTTY::NewPage()
     Home();
 }
 
+void CairoTTY::SetFontName(const std::string family)
+{
+    m_FontName = family;
+}
+
+void CairoTTY::SetFontSize(const double size)
+{
+    m_FontSize = size;
+}
+
+void CairoTTY::SetFontWeight(const FontWeight weight)
+{
+    m_FontWeight = weight;
+}
+
+void CairoTTY::SetFontSlant(const FontSlant slant)
+{
+    m_FontSlant = slant;
+}
+
 void CairoTTY::SetLineSpacing(double spacing)
 {
     m_lineSpacing = 69.0 *  spacing;
 }
-
 void CairoTTY::SetTabWidth(int spaces)
 {
-
     m_tabWidth = spaces;
 }
 
@@ -135,40 +178,51 @@ void CairoTTY::StretchFont(double stretch_x, double stretch_y)
     m_StretchY = stretch_y;
 }
 
-void CairoTTY::append(gunichar c)
+void CairoTTY::append(char c)
 {
     gunichar uc;
 
+    if (m_CpTranslator == nullptr)
+    {
+        m_CpTranslator = new AsciiCodepageTranslator();
+    }
+
     if (m_CpTranslator->translate(c, uc))
     {
-        if (c == 0x09)
-        {
-            // TODO: tab handling
-            for (int i = 0; i < m_tabWidth; ++i)
-            {
-                append((gunichar) ' ');
-            }
-            return;
-        }
-        Glib::ustring s(1, uc);
-
-        Cairo::TextExtents t;
-        m_Context->get_text_extents(s, t);
-        double x_advance = m_StretchX * t.x_advance;
-
-        if (m_Margins.m_Left + m_x + x_advance > m_PageSize.m_Width - m_Margins.m_Right)
-            NewLine(); // forced linebreak - text wraps to the next line
-
-        m_Context->save();
-        m_Context->move_to(m_Margins.m_Left + m_x, m_Margins.m_Top + m_y);
-        m_Context->scale(m_StretchX, m_StretchY);
-        m_Context->show_text(s);
-        m_Context->restore();
-
-        // We ignore y_advance, as we in no way can support
-        // vertical text layout.
-        m_x += x_advance;
+        append(uc);
     }
+}
+
+void CairoTTY::append(gunichar c)
+{
+    if (c == 0x09)
+    {
+        // TODO: tab handling
+        return;
+    }
+    else if (Glib::Unicode::iscntrl(c))
+    {
+        std::cout << "Cannot print character 0x" << std::hex << c << std::endl;
+        return;
+    }
+    Glib::ustring s(1, c);
+
+    Cairo::TextExtents t;
+    m_Context->get_text_extents(s, t);
+    double x_advance = m_StretchX * t.x_advance;
+
+    if (m_Margins.m_Left + m_x + x_advance > m_PageSize.m_Width - m_Margins.m_Right)
+        NewLine(); // forced linebreak - text wraps to the next line
+
+    m_Context->save();
+    m_Context->move_to(m_Margins.m_Left + m_x, m_Margins.m_Top + m_y);
+    m_Context->scale(m_StretchX, m_StretchY);
+    m_Context->show_text(s);
+    m_Context->restore();
+
+    // We ignore y_advance, as we in no way can support
+    // vertical text layout.
+    m_x += x_advance;
 }
 
 void CairoTTY::append(Pixmap p)
@@ -203,3 +257,4 @@ void CairoTTY::append(Pixmap p)
     m_Context->stroke();
     m_Context->restore();
 }
+

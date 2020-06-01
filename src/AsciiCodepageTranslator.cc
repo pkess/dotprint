@@ -17,24 +17,37 @@
  * along with dotprint. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <map>
+#include "AsciiCodepageTranslator.h"
+#include <fstream>
+#include <iostream>
 #include <sstream>
-#include <string>
-#include "CairoTTY.h"
+#include <iomanip>
 
-class CodepageTranslator : public ICodepageTranslator
+AsciiCodepageTranslator::AsciiCodepageTranslator()
 {
-public:
-    CodepageTranslator();
-    virtual ~CodepageTranslator();
+}
 
-    void loadTable(std::string const& tableName);
+AsciiCodepageTranslator::~AsciiCodepageTranslator()
+{
+}
 
-    virtual bool translate(unsigned char in, gunichar &out);
+bool AsciiCodepageTranslator::translate(unsigned char in, gunichar &out)
+{
+    bool ret = false;
 
-private:
-    typedef std::map<unsigned char, gunichar> TTransTable;
+    if (in <= 127)
+    {
+        out = in;
+        ret = true;
+    }
+    else
+    {
+        int i = in;
+        ret = false;
+        std::cerr << "AsciiCodepageTranslator::translate(): Droppping unknown char 0x"
+            << std::setfill('0') << std::setw(2) << std::hex << i << std::endl;
+    }
 
-    TTransTable m_table;
-};
+    return ret;
+}
 

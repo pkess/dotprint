@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Peter Kessen <p.kessen at kessen-peter.de>
+ * Copyright (C) 2009, 2012, 2014, 2020 David Kozub <zub at linux.fjfi.cvut.cz>
  *
  * This file is part of dotprint.
  *
@@ -17,24 +17,18 @@
  * along with dotprint. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <map>
-#include <sstream>
-#include <string>
+#ifndef MARGINSFACTORY_H_
+#define MARGINSFACTORY_H_
+
 #include "CairoTTY.h"
 
-class CodepageTranslator : public ICodepageTranslator
+class MarginsFactory
 {
 public:
-    CodepageTranslator();
-    virtual ~CodepageTranslator();
+    static const double DEFAULT_MARGIN_VALUE;
+    static const Margins &GetDefault();
 
-    void loadTable(std::string const& tableName);
-
-    virtual bool translate(unsigned char in, gunichar &out);
-
-private:
-    typedef std::map<unsigned char, gunichar> TTransTable;
-
-    TTransTable m_table;
+    MarginsFactory() = delete;
 };
 
+#endif /*MARGINSFACTORY_H_*/

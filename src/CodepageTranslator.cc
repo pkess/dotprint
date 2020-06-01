@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2020 Peter Kessen <p.kessen at kessen-peter.de>
  *
  * This file is part of dotprint.
  *
@@ -17,6 +18,10 @@
  */
 
 #include "CodepageTranslator.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
 CodepageTranslator::CodepageTranslator()
 {
@@ -25,45 +30,73 @@ CodepageTranslator::CodepageTranslator()
 CodepageTranslator::~CodepageTranslator()
 {
 }
-#include <iostream>
+
+void CodepageTranslator::loadTable(std::string const& tableName)
+{
+    std::fstream f(tableName, std::fstream::in);
+    std::string line;
+
+    m_table.clear();
+
+    if (!f.is_open())
+    {
+        std::cerr << "Unable to load translation file: " << tableName << std::endl;
+        exit(1);
+    }
+
+    while (std::getline(f, line))
+    {
+        auto startText = line.find_first_not_of(" \t");
+        if (startText == std::string::npos)
+        {
+            // Skip empty line (only comment)
+            continue;
+        }
+        auto startComment = line.find_first_of("#", startText);
+
+        auto text = line.substr(startText, startComment - startText);
+        if (text.length() > 0)
+        {
+            std::stringstream ss1(text);
+            unsigned int c;
+            std::string uni;
+
+            ss1 >> std::hex >> c >> uni;
+            if (c > 0xFF)
+            {
+                std::cerr << "Could not parse line. Character value to high: " << text << std::endl;
+                exit(1);
+            }
+            unsigned char ch = (unsigned char) c;
+            if (uni.substr(0, 2) != "U+")
+            {
+                std::cerr << "Could not parse line. Unicode value not correctly formatted: " << text << std::endl;
+                exit(1);
+            }
+            std::stringstream ss2(uni.substr(2));
+            gunichar unichar;
+            ss2 >> std::hex >> unichar;
+            m_table.insert({ch, unichar});
+        }
+    }
+}
+
 bool CodepageTranslator::translate(unsigned char in, gunichar &out)
 {
     bool ret = false;
+    auto search = m_table.find(in);
 
-    if (in >= 21 && in < 127)
+    if (search != m_table.end())
     {
+        out = search->second;
         ret = true;
-        out = in;
-    }
-    else if (in == 9) // Tab
-    {
-        ret = true;
-        out = in;
-    }
-    else if (in == 0x81)
-    {
-        ret = true;
-        out = 0x00fc;
-    }
-    else if (in == 0x84)
-    {
-        ret = true;
-        out = 0x00e4;
-    }
-    else if (in == 0xc4)
-    {
-        ret = true;
-        out = 0x2500;
-    }
-    else if (in == 0xe1)
-    {
-        ret = true;
-        out = 0x00df;
     }
     else
     {
+        int i = in;
         ret = false;
-        std::cout << "Droppping 0x" << std::hex << ((unsigned int) in) << std::endl;
+        std::cerr << "CodepageTranslator::translate(): Droppping unknown char 0x"
+            << std::setfill('0') << std::setw(2) << std::hex << i << std::endl;
     }
 
     return ret;

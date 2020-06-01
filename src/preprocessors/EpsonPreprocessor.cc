@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 #include <glibmm.h>
 #include "EpsonPreprocessor.h"
 
@@ -29,7 +30,7 @@ EpsonPreprocessor::EpsonPreprocessor():
     m_CntBytesToDrop(0)
 {}
 
-void EpsonPreprocessor::process(ICairoTTYProtected &ctty, gunichar c)
+void EpsonPreprocessor::process(ICairoTTYProtected &ctty, unsigned char c)
 {
     if (m_InputState == InputState::Escape)
         handleEscape(ctty, c);
@@ -81,14 +82,16 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, gunichar c)
             break;
 
         default:
-            ctty.append(c);
+            ctty.append((char) c);
             break;
         }
     }
 }
 
-void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
+void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, unsigned char c)
 {
+    (void)ctty; // currently unused
+
     // Determine what escape code follows
     if (m_EscapeState == EscapeState::Entered)
     {
@@ -120,6 +123,21 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
             std::cerr << "EpsonPreprocessor::handleEscape(): ignoring unknown escape ESC 0x" << std::hex << c << std::endl;
             m_InputState = InputState::InputNormal; // Leave escape state
         }
+
+        /*
+         * If still in the escape state (no change to special), assume
+         * the operation has completed, and exit the escape state.
+         *
+         * This includes the error condition, as no change is done either.
+         */
+        if (m_EscapeState == EscapeState::Entered)
+        {
+            m_InputState = InputState::InputNormal;
+        }
+
+        // Allow font to update if it has changed.
+        ctty.UseCurrentFont();
+
         return;
     }
 
@@ -184,7 +202,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, gunichar c)
     }
 }
 
-void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, gunichar c)
+void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, unsigned char c)
 {
     static struct Pixmap p;
     static int col;

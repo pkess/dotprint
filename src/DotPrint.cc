@@ -23,62 +23,11 @@
 
 #include <assert.h>
 
-#include <unistd.h>
 #include <getopt.h>
 
 #include "CairoTTY.h"
 #include "PageSizeFactory.h"
 #include "CmdLineParser.h"
-
-class UniFileStream
-{
-public:
-    UniFileStream(const std::string &fname):
-        m_io(nullptr),
-        m_eof(false)
-    {
-        GError *err = nullptr;
-
-        m_io = new std::fstream(fname.c_str(), std::fstream::in | std::fstream::binary);
-        if (!m_io)
-        {
-            assert(err != nullptr);
-
-            throw std::runtime_error(std::string("Cannot open input file: ") + err->message);
-        }
-    }
-
-    bool ReadUniChar(gunichar &c)
-    {
-        assert(m_io != nullptr);
-        char ch;
-        (*m_io).get(ch);
-        c = (unsigned char) ch;
-
-        if ((*m_io).eof())
-            m_eof = true;
-        else
-            return true;
-
-        c = 0;
-        return false;
-    }
-
-    bool Eof() const
-    {
-        return m_eof;
-    }
-
-    ~UniFileStream()
-    {
-        assert(m_io != nullptr);
-        (*m_io).close();
-    }
-
-protected:
-    std::fstream *m_io;
-    bool m_eof;
-};
 
 int main(int argc, char *argv[])
 {
@@ -89,23 +38,27 @@ int main(int argc, char *argv[])
         p.Landscape();
 
     ICharPreprocessor *preproc = cmdline.GetPreprocessor();
+    ICodepageTranslator *translator = cmdline.GetCodepageTranslator();
 
     Cairo::RefPtr<Cairo::PdfSurface> cs = Cairo::PdfSurface::create(cmdline.GetOutputFile(), p.m_Width, p.m_Height);
     assert(cs);
 
-    Margins m(10.0 * milimeter,10.0 * milimeter,10.0 * milimeter);
+    Margins m = cmdline.GetPageMargins();
 
-    CairoTTY ctty(cs, p, m, preproc);
+    CairoTTY ctty(cs, p, m, preproc, translator);
 
-    // copy the file into ctty
-    ctty.SetFont(cmdline.GetFontFace(), cmdline.GetFontSize(), Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
+    // Set the font
+    ctty.SetFontName(cmdline.GetFontFace());
+    ctty.SetFontSize(cmdline.GetFontSize());
+    ctty.UseCurrentFont();
 
-    UniFileStream f(cmdline.GetInputFile());
-
-    gunichar c;
-    while (f.ReadUniChar(c))
+    std::fstream f(cmdline.GetInputFile(), std::fstream::in | std::fstream::binary);
+    assert(f.is_open());
+    char c;
+    while (!f.get(c).eof())
     {
-        ctty << c;
+        unsigned char uc = (unsigned char) c;
+        ctty << uc;
     }
 
     return 0;
