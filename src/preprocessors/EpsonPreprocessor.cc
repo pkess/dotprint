@@ -93,6 +93,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, uint8_t c)
     // Determine what escape code follows
     if (m_EscapeState == EscapeState::Entered)
     {
+        std::cout << "ESC 0x" << std::hex << c << std::endl;
         switch (c)
         {
         case 0x45: // Set bold
@@ -117,6 +118,9 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, uint8_t c)
         case 0x33: // Set n/180-inch line spacing ESC 3 n (24 pin printer - ESC/P2 or ESC/P) or
                     // n/216 inches line spacing (9 pin printer)
             m_EscapeState = EscapeState::SetLineSpacing;
+            break;
+        case 0x40: // @: Initialize
+            m_InputState = InputState::InputNormal; // Leave escape state
             break;
         case 0x44: // Insert tab
             m_EscapeState = EscapeState::SetTabWidth;

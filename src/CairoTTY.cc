@@ -30,6 +30,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
     m_FontWeight(FontWeight::Normal),
     m_FontSlant(FontSlant::Normal),
     m_Margins(m),
+    m_tabWidth(8),
     m_Preprocessor(preprocessor),
     m_CpTranslator(translator)
 {
@@ -40,6 +41,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
     StretchFont(1.0, 1.0);
     UseCurrentFont();
 
+    m_lineSpacing = m_FontExtents.height * m_StretchY;
     Home();
 }
 
@@ -114,7 +116,7 @@ void CairoTTY::SetPageSize(const PageSize &p)
 void CairoTTY::Home()
 {
     m_x = 0.0;
-    m_y = m_FontExtents.height * m_StretchY; // so that the top of the first line touches 0.0
+    m_y = m_lineSpacing; // so that the top of the first line touches 0.0
 }
 
 void CairoTTY::NewLine()
@@ -130,7 +132,7 @@ void CairoTTY::CarriageReturn()
 
 void CairoTTY::LineFeed()
 {
-    m_y += m_FontExtents.height * m_StretchY;
+    m_y += m_lineSpacing;
 
     // check if we still fit on the page
     if (m_Margins.m_Top + m_y > m_PageSize.m_Height - m_Margins.m_Bottom)
@@ -167,8 +169,10 @@ void CairoTTY::SetLineSpacing(double spacing)
 {
     m_lineSpacing = 69.0 *  spacing;
 }
+
 void CairoTTY::SetTabWidth(int spaces)
 {
+
     m_tabWidth = spaces;
 }
 
