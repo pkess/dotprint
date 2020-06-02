@@ -202,6 +202,10 @@ void CairoTTY::append(gunichar c)
     if (c == 0x09)
     {
         // TODO: tab handling
+        for (int i = 0; i < m_tabWidth; ++i)
+        {
+            append((gunichar) ' ');
+        }
         return;
     }
     else if (Glib::Unicode::iscntrl(c))
