@@ -53,11 +53,14 @@ int main(int argc, char *argv[])
     ctty.UseCurrentFont();
 
     std::fstream f(cmdline.GetInputFile(), std::fstream::in | std::fstream::binary);
-    assert(f.is_open());
+    if (!f.is_open())
+    {
+        throw std::ios_base::failure("Unable to open file \"" + cmdline.GetInputFile() + "\"");
+    }
     char c;
     while (!f.get(c).eof())
     {
-        unsigned char uc = (unsigned char) c;
+        uint8_t uc = (uint8_t) c;
         ctty << uc;
     }
 

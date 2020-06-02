@@ -20,6 +20,7 @@
 #ifndef CAIROTTY_H_
 #define CAIROTTY_H_
 
+#include <cstdint>
 #include <string>
 #include <algorithm>
 #include <glibmm.h>
@@ -123,7 +124,7 @@ public:
 class ICharPreprocessor
 {
 public:
-    virtual void process(ICairoTTYProtected &ctty, unsigned char c) = 0;
+    virtual void process(ICairoTTYProtected &ctty, uint8_t c) = 0;
 
     virtual ~ICharPreprocessor()
     {}
@@ -132,7 +133,7 @@ public:
 class ICodepageTranslator
 {
 public:
-    virtual bool translate(unsigned char in, gunichar &out) = 0;
+    virtual bool translate(uint8_t in, gunichar &out) = 0;
 
     virtual ~ICodepageTranslator()
     {}
@@ -145,7 +146,7 @@ public:
 
     virtual ~CairoTTY();
 
-    CairoTTY &operator<<(unsigned char c);
+    CairoTTY &operator<<(uint8_t c);
 
     void SetPreprocessor(ICharPreprocessor *preprocessor);
 

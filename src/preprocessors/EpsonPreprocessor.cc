@@ -30,7 +30,7 @@ EpsonPreprocessor::EpsonPreprocessor():
     m_CntBytesToDrop(0)
 {}
 
-void EpsonPreprocessor::process(ICairoTTYProtected &ctty, unsigned char c)
+void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
 {
     if (m_InputState == InputState::Escape)
         handleEscape(ctty, c);
@@ -88,16 +88,25 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, unsigned char c)
     }
 }
 
-void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, unsigned char c)
+void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, uint8_t c)
 {
-    (void)ctty; // currently unused
-
     // Determine what escape code follows
     if (m_EscapeState == EscapeState::Entered)
     {
-        std::cout << "ESC 0x" << std::hex << c << std::endl;
         switch (c)
         {
+        case 0x45: // Set bold
+            ctty.SetFontWeight(FontWeight::Bold);
+            break;
+        case 0x46: // Unset bold
+            ctty.SetFontWeight(FontWeight::Normal);
+            break;
+        case 0x34: // Set italic
+            ctty.SetFontSlant(FontSlant::Italic);
+            break;
+        case 0x35: // Unset italic
+            ctty.SetFontSlant(FontSlant::Normal);
+            break;
         case 0x2a: // Draw Graphics
             m_GraphicAssembledBytes = 0;
             m_EscapeState = EscapeState::DrawGraphics;
@@ -109,9 +118,6 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, unsigned char c)
                     // n/216 inches line spacing (9 pin printer)
             m_EscapeState = EscapeState::SetLineSpacing;
             break;
-        case 0x40: // @: Initialize
-            m_InputState = InputState::InputNormal; // Leave escape state
-            break;
         case 0x44: // Insert tab
             m_EscapeState = EscapeState::SetTabWidth;
             break;
@@ -120,8 +126,12 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, unsigned char c)
             break;
 
         default:
-            std::cerr << "EpsonPreprocessor::handleEscape(): ignoring unknown escape ESC 0x" << std::hex << c << std::endl;
-            m_InputState = InputState::InputNormal; // Leave escape state
+            {
+                int i = c;
+                std::cerr << "EpsonPreprocessor::handleEscape(): ignoring unknown escape ESC 0x"
+                    << std::setfill('0') << std::setw(2) << std::hex << i << std::endl;
+                m_InputState = InputState::InputNormal; // Leave escape state
+            }
         }
 
         /*
@@ -202,7 +212,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, unsigned char c)
     }
 }
 
-void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, unsigned char c)
+void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, uint8_t c)
 {
     static struct Pixmap p;
     static int col;

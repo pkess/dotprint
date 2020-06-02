@@ -26,11 +26,11 @@ class EpsonPreprocessor: public ICharPreprocessor
 {
 public:
     EpsonPreprocessor();
-    virtual void process(ICairoTTYProtected &ctty, unsigned char c) override;
+    virtual void process(ICairoTTYProtected &ctty, uint8_t c) override;
 
 private:
-    void handleEscape(ICairoTTYProtected &ctty, unsigned char c);
-    void handleGraphics(ICairoTTYProtected &ctty, unsigned char c);
+    void handleEscape(ICairoTTYProtected &ctty, uint8_t c);
+    void handleGraphics(ICairoTTYProtected &ctty, uint8_t c);
 
     enum class InputState
     {

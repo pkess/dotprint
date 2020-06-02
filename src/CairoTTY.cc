@@ -114,7 +114,7 @@ void CairoTTY::SetPageSize(const PageSize &p)
 void CairoTTY::Home()
 {
     m_x = 0.0;
-    m_y = m_lineSpacing; // so that the top of the first line touches 0.0
+    m_y = m_FontExtents.height * m_StretchY; // so that the top of the first line touches 0.0
 }
 
 void CairoTTY::NewLine()
@@ -130,7 +130,7 @@ void CairoTTY::CarriageReturn()
 
 void CairoTTY::LineFeed()
 {
-    m_y += m_lineSpacing;
+    m_y += m_FontExtents.height * m_StretchY;
 
     // check if we still fit on the page
     if (m_Margins.m_Top + m_y > m_PageSize.m_Height - m_Margins.m_Bottom)
