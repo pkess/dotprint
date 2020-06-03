@@ -27,7 +27,10 @@ EpsonPreprocessor::EpsonPreprocessor():
     m_InputState(InputState::InputNormal),
     m_EscapeState(EscapeState::Entered), // not used unless m_InputState is Escape
     m_FontSizeState(FontSizeState::FontSizeNormal)
-{}
+{
+    // TODO: set this only with conditional
+    m_ExpandedPrintingNoStretch = true;
+}
 
 void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
 {
@@ -39,11 +42,27 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
         switch (c)
         {
         case 0x0e: // Expanded printing for one line
-            ctty.StretchFont(2.0);
+            m_ExpandedPrintingEnabled = true;
+            m_ExpandedPrintingChars = 0;
+            if (!m_ExpandedPrintingNoStretch)
+            {
+                ctty.StretchFont(2.0);
+            }
             m_FontSizeState = FontSizeState::SingleLineExpanded;
             break;
 
         case 0x14: // Cancel one-line expanded printing
+            if (m_ExpandedPrintingEnabled)
+            {
+                if (m_ExpandedPrintingNoStretch)
+                {
+                    for (int i = 0; i < m_ExpandedPrintingChars; ++i)
+                    {
+                        ctty.append((gunichar) ' ');
+                    }
+                }
+                m_ExpandedPrintingEnabled = false;
+            }
             ctty.StretchFont(1.0);
             m_FontSizeState = FontSizeState::FontSizeNormal;
             break;
@@ -81,6 +100,10 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
             break;
 
         default:
+            if (m_ExpandedPrintingEnabled)
+            {
+                m_ExpandedPrintingChars += 1;
+            }
             ctty.append((char) c);
             break;
         }

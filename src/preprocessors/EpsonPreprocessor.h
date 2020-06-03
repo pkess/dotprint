@@ -60,6 +60,9 @@ private:
     EscapeState m_EscapeState;
     FontSizeState m_FontSizeState;
     bool m_Escape;
+    bool m_ExpandedPrintingNoStretch;
+    bool m_ExpandedPrintingEnabled;
+    int m_ExpandedPrintingChars;
     int m_GraphicAssembledBytes;
     uint8_t m_GraphicsMode; // Graphics mode
     int m_GraphicsDpi; // Dots per inch
