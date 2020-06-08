@@ -104,6 +104,7 @@ public:
     virtual void UseCurrentFont() = 0;
 
     virtual void append(char c) = 0;
+    virtual void appendNote(uint8_t c) = 0;
     virtual void append(gunichar c) = 0;
 
     virtual ~ICairoTTYProtected()
@@ -157,6 +158,7 @@ public:
 
 protected:
     virtual void append(char c);
+    virtual void appendNote(uint8_t c);
     virtual void append(gunichar c);
 
 private:

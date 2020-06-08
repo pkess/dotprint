@@ -35,7 +35,10 @@ EpsonPreprocessor::EpsonPreprocessor():
 void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
 {
     if (m_InputState == InputState::Escape)
+    {
         handleEscape(ctty, c);
+        //ctty.appendNote(c);
+    }
     else
     {
         // Control codes handled here

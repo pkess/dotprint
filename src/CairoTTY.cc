@@ -18,6 +18,8 @@
  */
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <assert.h>
 #include "CairoTTY.h"
 #include "AsciiCodepageTranslator.h"
@@ -182,6 +184,22 @@ void CairoTTY::append(char c)
     {
         append(uc);
     }
+}
+
+void CairoTTY::appendNote(uint8_t c)
+{
+    std::stringstream ss;
+    ss << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex <<(unsigned int) c;
+
+    Cairo::TextExtents t;
+    m_Context->get_text_extents(ss.str(), t);
+
+    m_Context->save();
+    //m_Context->move_to(m_Margins.m_Left + m_x, m_Margins.m_Top + m_y);
+    m_Context->move_to(0.0, m_Margins.m_Top + m_y);
+    m_Context->scale(m_StretchX, m_StretchY);
+    m_Context->show_text(ss.str());
+    m_Context->restore();
 }
 
 void CairoTTY::append(gunichar c)
