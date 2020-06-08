@@ -201,7 +201,11 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, uint8_t c)
         break;
 
     case EscapeState::SetLineSpacing:
-        // TODO: implement line spacing in CairoTTY
+        {
+            int nrTabs = (unsigned int) c;
+            double spacing = ((double) nrTabs) / 180.0;
+            ctty.SetLineSpacing(spacing);
+        }
         m_InputState = InputState::InputNormal;
         break;
 
@@ -212,7 +216,8 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, uint8_t c)
         }
         else
         {
-            // TODO: set tab width for CairoTTY or handle tabs here
+            int nrTabs = (unsigned int) c;
+            ctty.SetTabWidth(nrTabs);
         }
         break;
 
@@ -233,6 +238,7 @@ void EpsonPreprocessor::handleEscape(ICairoTTYProtected &ctty, uint8_t c)
 
 void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, uint8_t c)
 {
+    static struct Pixmap p;
     static int col;
 
     if (0 == m_GraphicAssembledBytes)
@@ -250,25 +256,33 @@ void EpsonPreprocessor::handleGraphics(ICairoTTYProtected &ctty, uint8_t c)
         int nh = (unsigned char) c;
         m_GraphicsNrColumns += nh * 256;
         m_GraphicAssembledBytes = 3;
+        p.map.clear();
     }
     else
     {
         if (m_GraphicAssembledBytes == 3)
         {
             m_GraphicsMaxBytes = m_GraphicsNrColumns * 3;
+            std::cout << "Graphics definition mode (" << (unsigned int) m_GraphicsMode;
+            std::cout << ") colums (" << m_GraphicsNrColumns;
+            std::cout << ") bytes (" << m_GraphicsMaxBytes << ")" << std::endl;
         }
 
         int rowGroup = m_GraphicAssembledBytes % 3;
         col |= ((unsigned int) c) << (8 * (2 - rowGroup));
         if (2 == rowGroup)
         {
+            p.map.push_back(col);
             col = 0;
         }
 
         ++m_GraphicAssembledBytes;
         if (m_GraphicAssembledBytes >= (m_GraphicsMaxBytes + 3))
         {
+            std::cout << std::endl;
+            std::cout << "Finished graphics" << std::endl;
             m_InputState = InputState::InputNormal; // Leave escape state
+            ctty.append(p);
         }
     }
 }

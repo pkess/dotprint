@@ -32,6 +32,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
     m_FontWeight(FontWeight::Normal),
     m_FontSlant(FontSlant::Normal),
     m_Margins(m),
+    m_tabWidth(8),
     m_Preprocessor(preprocessor),
     m_CpTranslator(translator)
 {
@@ -42,6 +43,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
     StretchFont(1.08, 1.0);
     UseCurrentFont();
 
+    m_lineSpacing = m_FontExtents.height * m_StretchY;
     Home();
 }
 
@@ -116,7 +118,7 @@ void CairoTTY::SetPageSize(const PageSize &p)
 void CairoTTY::Home()
 {
     m_x = 0.0;
-    m_y = m_FontExtents.height * m_StretchY; // so that the top of the first line touches 0.0
+    m_y = m_lineSpacing; // so that the top of the first line touches 0.0
 }
 
 void CairoTTY::NewLine()
@@ -132,7 +134,7 @@ void CairoTTY::CarriageReturn()
 
 void CairoTTY::LineFeed()
 {
-    m_y += m_FontExtents.height * m_StretchY;
+    m_y += m_lineSpacing;
 
     // check if we still fit on the page
     if (m_Margins.m_Top + m_y > m_PageSize.m_Height - m_Margins.m_Bottom)
@@ -163,6 +165,17 @@ void CairoTTY::SetFontWeight(const FontWeight weight)
 void CairoTTY::SetFontSlant(const FontSlant slant)
 {
     m_FontSlant = slant;
+}
+
+void CairoTTY::SetLineSpacing(double spacing)
+{
+    m_lineSpacing = 69.0 *  spacing;
+}
+
+void CairoTTY::SetTabWidth(int spaces)
+{
+
+    m_tabWidth = spaces;
 }
 
 void CairoTTY::StretchFont(double stretch_x, double stretch_y)
@@ -207,6 +220,10 @@ void CairoTTY::append(gunichar c)
     if (c == 0x09)
     {
         // TODO: tab handling
+        for (int i = 0; i < m_tabWidth; ++i)
+        {
+            append((gunichar) ' ');
+        }
         return;
     }
     else if (Glib::Unicode::iscntrl(c))
@@ -232,5 +249,38 @@ void CairoTTY::append(gunichar c)
     // We ignore y_advance, as we in no way can support
     // vertical text layout.
     m_x += x_advance;
+}
+
+void CairoTTY::append(Pixmap p)
+{
+    double x0 = m_Margins.m_Left + m_x -4.0;
+    double y0 = m_Margins.m_Top + m_y -6.0;
+    double x = 0;
+    double y = 0;
+    double x_inc = 0.55;
+    double y_inc = 0.36;
+
+    m_Context->save();
+    m_Context->set_line_width(0.4);
+    for (auto &row : p.map)
+    {
+        y = 0;
+        double x_off = x0 + (x * x_inc);
+        for (int i = 0; i < 24; ++i)
+        {
+            double y_off = y0 + (y * y_inc);
+            if (row & (1 << (23 - i)))
+            {
+                m_Context->move_to(x_off, y_off);
+                m_Context->line_to(x_off + 0.6, y_off);
+                m_Context->line_to(x_off + 0.6, y_off + y_inc);
+                m_Context->line_to(x_off, y_off + y_inc);
+            }
+            ++y;
+        }
+        ++x;
+    }
+    m_Context->stroke();
+    m_Context->restore();
 }
 

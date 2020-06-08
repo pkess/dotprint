@@ -85,6 +85,14 @@ enum class FontSlant
     Italic
 };
 
+struct Pixmap
+{
+    Pixmap()
+    {}
+
+    std::vector<int> map;
+};
+
 class ICairoTTYProtected
 {
 public:
@@ -94,6 +102,8 @@ public:
     virtual void NewLine() = 0;
     virtual void CarriageReturn() = 0;
     virtual void LineFeed() = 0;
+    virtual void SetLineSpacing(double spacing) = 0;
+    virtual void SetTabWidth(int spaces) = 0;
     virtual void NewPage() = 0;
 
     virtual void SetFontName(const std::string family) = 0;
@@ -106,6 +116,7 @@ public:
     virtual void append(char c) = 0;
     virtual void appendNote(uint8_t c) = 0;
     virtual void append(gunichar c) = 0;
+    virtual void append(Pixmap p) = 0;
 
     virtual ~ICairoTTYProtected()
     {}
@@ -148,6 +159,8 @@ public:
     virtual void NewLine();
     virtual void CarriageReturn();
     virtual void LineFeed();
+    virtual void SetLineSpacing(double spacing);
+    virtual void SetTabWidth(int spaces);
     virtual void NewPage();
 
     virtual void SetFontName(const std::string family = "Courier New");
@@ -160,6 +173,7 @@ protected:
     virtual void append(char c);
     virtual void appendNote(uint8_t c);
     virtual void append(gunichar c);
+    virtual void append(Pixmap p);
 
 private:
     Cairo::RefPtr<Cairo::PdfSurface> m_CairoSurface;
@@ -174,8 +188,10 @@ private:
     Margins m_Margins;
     PageSize m_PageSize;
 
+    int m_tabWidth;
     double m_x;
     double m_y;
+    double m_lineSpacing;
 
     double m_StretchX;
     double m_StretchY;
