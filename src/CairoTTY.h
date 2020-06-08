@@ -188,6 +188,8 @@ private:
     Margins m_Margins;
     PageSize m_PageSize;
 
+    int m_linesPerPage;
+    int m_linesThisPage;
     int m_tabWidth;
     double m_x;
     double m_y;
