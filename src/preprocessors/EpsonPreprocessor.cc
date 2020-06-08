@@ -63,17 +63,20 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
                 }
                 m_ExpandedPrintingEnabled = false;
             }
-            ctty.StretchFont(1.0);
+            else
+            {
+                //ctty.StretchFont(1.0);
+            }
             m_FontSizeState = FontSizeState::FontSizeNormal;
             break;
 
         case 0x0f: // Condensed printing
-            ctty.StretchFont(10.0/17.0); // Change from 10 CPI to 17 CPI
+            //ctty.StretchFont(10.0/17.0); // Change from 10 CPI to 17 CPI
             m_FontSizeState = FontSizeState::Condensed;
             break;
 
         case 0x12: // Cancel condensed printing
-            ctty.StretchFont(1.0);
+            //ctty.StretchFont(1.0);
             m_FontSizeState = FontSizeState::FontSizeNormal;
             break;
 
@@ -84,7 +87,7 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
         case '\n': // Line Feed
             if (m_FontSizeState == FontSizeState::SingleLineExpanded)
             {
-                ctty.StretchFont(1.0);
+                //ctty.StretchFont(1.0);
                 m_FontSizeState = FontSizeState::FontSizeNormal;
             }
             ctty.LineFeed();

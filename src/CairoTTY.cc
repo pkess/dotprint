@@ -37,7 +37,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
 
     SetPageSize(p);
 
-    StretchFont(1.0, 1.0);
+    StretchFont(1.08, 1.0);
     UseCurrentFont();
 
     Home();
