@@ -51,6 +51,11 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
             {
                 ctty.StretchFont(2.0);
             }
+            else
+            {
+                ctty.SetFontWeight(FontWeight::Bold);
+                ctty.UseCurrentFont();
+            }
             m_FontSizeState = FontSizeState::SingleLineExpanded;
             break;
 
@@ -65,6 +70,8 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
                     }
                 }
                 m_ExpandedPrintingEnabled = false;
+                ctty.SetFontWeight(FontWeight::Normal);
+                ctty.UseCurrentFont();
             }
             else
             {
