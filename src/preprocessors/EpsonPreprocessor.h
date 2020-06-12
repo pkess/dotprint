@@ -26,6 +26,7 @@ class EpsonPreprocessor: public ICharPreprocessor
 {
 public:
     EpsonPreprocessor();
+    void emptyCrLf(ICairoTTYProtected &ctty);
     virtual void process(ICairoTTYProtected &ctty, uint8_t c) override;
 
 private:
@@ -69,6 +70,10 @@ private:
     int m_GraphicsDpc; // Dots per column
     int m_GraphicsNrColumns; // Number of columns
     int m_GraphicsMaxBytes; // Number of columns
+    int m_NewlineCountNewPage; // Number of newlines for start of new page
+    int m_NewlineConsec; // Counter for number of consecutive newlines
+    bool m_DoCr;
+    bool m_FirstPage;
 };
 
 #endif // EPSON_PREPROCESSOR_H_

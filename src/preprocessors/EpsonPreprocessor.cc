@@ -30,6 +30,33 @@ EpsonPreprocessor::EpsonPreprocessor():
 {
     // TODO: set this only with conditional
     m_ExpandedPrintingNoStretch = true;
+    m_NewlineCountNewPage = 11;
+    m_NewlineConsec = 0;
+    m_FirstPage = true;
+}
+
+void EpsonPreprocessor::emptyCrLf(ICairoTTYProtected &ctty)
+{
+    if (m_NewlineConsec >= m_NewlineCountNewPage)
+    {
+        if (m_FirstPage)
+        {
+            m_FirstPage = false;
+        }
+        else
+        {
+            ctty.NewPage();
+        }
+        m_NewlineConsec = m_NewlineCountNewPage;
+        std::cout << "new page" << std::endl;
+    }
+    for (int i = 0; i < m_NewlineConsec; ++i)
+    {
+        std::cout << "Print newline " << m_NewlineConsec << std::endl;
+        ctty.CarriageReturn();
+        ctty.LineFeed();
+    }
+    m_NewlineConsec = 0;
 }
 
 void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
@@ -44,81 +71,114 @@ void EpsonPreprocessor::process(ICairoTTYProtected &ctty, uint8_t c)
         // Control codes handled here
         switch (c)
         {
-        case 0x0e: // Expanded printing for one line
-            m_ExpandedPrintingEnabled = true;
-            m_ExpandedPrintingChars = 0;
-            if (!m_ExpandedPrintingNoStretch)
-            {
-                ctty.StretchFont(2.0);
-            }
-            else
-            {
-                ctty.SetFontWeight(FontWeight::Bold);
-                ctty.UseCurrentFont();
-            }
-            m_FontSizeState = FontSizeState::SingleLineExpanded;
-            break;
-
-        case 0x14: // Cancel one-line expanded printing
-            if (m_ExpandedPrintingEnabled)
-            {
-                if (m_ExpandedPrintingNoStretch)
-                {
-                    for (int i = 0; i < m_ExpandedPrintingChars; ++i)
-                    {
-                        ctty.append((gunichar) ' ');
-                    }
-                }
-                m_ExpandedPrintingEnabled = false;
-                ctty.SetFontWeight(FontWeight::Normal);
-                ctty.UseCurrentFont();
-            }
-            else
-            {
-                //ctty.StretchFont(1.0);
-            }
-            m_FontSizeState = FontSizeState::FontSizeNormal;
-            break;
-
-        case 0x0f: // Condensed printing
-            //ctty.StretchFont(10.0/17.0); // Change from 10 CPI to 17 CPI
-            m_FontSizeState = FontSizeState::Condensed;
-            break;
-
-        case 0x12: // Cancel condensed printing
-            //ctty.StretchFont(1.0);
-            m_FontSizeState = FontSizeState::FontSizeNormal;
-            break;
-
         case '\r': // Carriage Return
-            ctty.CarriageReturn();
+            if (m_DoCr)
+            {
+                // Double cr: output first
+                emptyCrLf(ctty);
+                ctty.CarriageReturn();
+            }
+            else
+            {
+                m_DoCr = true;
+            }
             break;
 
         case '\n': // Line Feed
+            if (m_DoCr)
+            {
+                // CR LF detected
+                m_DoCr = false;
+                ++m_NewlineConsec;
+                std::cout << "Assemble newline " << m_NewlineConsec << std::endl;
+            }
+            else
+            {
+                // LF without CR before: Empty cr lf buffer and print newline
+                emptyCrLf(ctty);
+                ctty.LineFeed();
+            }
+
             if (m_FontSizeState == FontSizeState::SingleLineExpanded)
             {
                 //ctty.StretchFont(1.0);
                 m_FontSizeState = FontSizeState::FontSizeNormal;
             }
-            ctty.LineFeed();
             break;
-
-        case 0x0c: // Form Feed
-            ctty.NewPage();
-            break;
-
-        case 0x1b: // Escape
-            m_InputState = InputState::Escape;
-            m_EscapeState = EscapeState::Entered;
-            break;
-
         default:
-            if (m_ExpandedPrintingEnabled)
+            emptyCrLf(ctty);
+            if (m_DoCr)
             {
-                m_ExpandedPrintingChars += 1;
+                // Output cr without following lf
+                ctty.CarriageReturn();
+                m_DoCr = false;
             }
-            ctty.append((char) c);
-            break;
+            // Control codes handled here
+            switch (c)
+            {
+            case 0x0e: // Expanded printing for one line
+                m_ExpandedPrintingEnabled = true;
+                m_ExpandedPrintingChars = 0;
+                if (!m_ExpandedPrintingNoStretch)
+                {
+                    ctty.StretchFont(2.0);
+                }
+                else
+                {
+                    ctty.SetFontWeight(FontWeight::Bold);
+                    ctty.UseCurrentFont();
+                }
+                m_FontSizeState = FontSizeState::SingleLineExpanded;
+                break;
+
+            case 0x14: // Cancel one-line expanded printing
+                if (m_ExpandedPrintingEnabled)
+                {
+                    if (m_ExpandedPrintingNoStretch)
+                    {
+                        for (int i = 0; i < m_ExpandedPrintingChars; ++i)
+                        {
+                            ctty.append((gunichar) ' ');
+                        }
+                    }
+                    m_ExpandedPrintingEnabled = false;
+                    ctty.SetFontWeight(FontWeight::Normal);
+                    ctty.UseCurrentFont();
+                }
+                else
+                {
+                    //ctty.StretchFont(1.0);
+                }
+                m_FontSizeState = FontSizeState::FontSizeNormal;
+                break;
+
+            case 0x0f: // Condensed printing
+                //ctty.StretchFont(10.0/17.0); // Change from 10 CPI to 17 CPI
+                m_FontSizeState = FontSizeState::Condensed;
+                break;
+
+            case 0x12: // Cancel condensed printing
+                //ctty.StretchFont(1.0);
+                m_FontSizeState = FontSizeState::FontSizeNormal;
+                break;
+
+            case 0x0c: // Form Feed
+                ctty.NewPage();
+                break;
+
+            case 0x1b: // Escape
+                m_InputState = InputState::Escape;
+                m_EscapeState = EscapeState::Entered;
+                break;
+
+            default:
+                if (m_ExpandedPrintingEnabled)
+                {
+                    m_ExpandedPrintingChars += 1;
+                }
+                ctty.append((char) c);
+                break;
+            }
         }
     }
 }
