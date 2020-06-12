@@ -262,8 +262,8 @@ void CairoTTY::append(gunichar c)
 
 void CairoTTY::append(Pixmap p)
 {
-    double x0 = m_Margins.m_Left + m_x -4.0;
-    double y0 = m_Margins.m_Top + m_y -6.0;
+    double x0 = m_Margins.m_Left + m_x -2.0;
+    double y0 = m_Margins.m_Top + m_y -7.2;
     double x = 0;
     double y = 0;
     double x_inc = 0.60;
