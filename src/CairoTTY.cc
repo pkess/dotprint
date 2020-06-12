@@ -178,7 +178,7 @@ void CairoTTY::SetFontSlant(const FontSlant slant)
 void CairoTTY::SetLineSpacing(double spacing)
 {
     //m_lineSpacing = 69.0 *  spacing;
-    m_lineSpacing = m_FontExtents.height * m_StretchY * 1.06 * 5.0 * spacing;
+    m_lineSpacing = m_FontExtents.height * m_StretchY * 1.0 * 5.0 * spacing;
 }
 
 void CairoTTY::SetTabWidth(int spaces)
