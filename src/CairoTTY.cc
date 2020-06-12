@@ -32,7 +32,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
     m_FontWeight(FontWeight::Normal),
     m_FontSlant(FontSlant::Normal),
     m_Margins(m),
-    m_linesPerPage(65),
+    m_linesPerPage(2000),
     m_linesThisPage(0),
     m_tabWidth(8),
     m_Preprocessor(preprocessor),
