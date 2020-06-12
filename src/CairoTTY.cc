@@ -46,6 +46,7 @@ CairoTTY::CairoTTY(Cairo::RefPtr<Cairo::PdfSurface> cs, const PageSize &p, const
     UseCurrentFont();
 
     SetLineSpacing(0.2);
+    //SetLineSpacing(4.0 / 180.0);
 
     Home();
 }
